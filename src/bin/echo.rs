@@ -1,6 +1,5 @@
 use maelstrom_challenge::Body;
 use maelstrom_challenge::Extra;
-use serde::Serialize;
 use std::io::stdin;
 use std::io::stdout;
 use std::io::BufRead;
@@ -12,7 +11,7 @@ struct Node {}
 
 impl Node {
     //TODO generic reader writer;
-    fn init() {
+    fn init<W: Write>(mut writer: W) {
         let stdin = stdin().lock();
         let line = stdin
             .lines()
@@ -21,7 +20,6 @@ impl Node {
             .expect("Init msg always present")
             .unwrap();
         let msg: Message = serde_json::from_str(&line).unwrap();
-        let mut writer = stdout().lock();
         serde_json::to_writer(
             &mut writer,
             &msg.reply(Body {
@@ -37,7 +35,7 @@ impl Node {
 }
 
 fn main() {
-    Node::init();
+    Node::init(stdout().lock());
     eprintln!("pad");
 
     let stdin = stdin().lock();
