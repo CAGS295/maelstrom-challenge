@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+pub mod echo;
 pub mod init;
 
 use init::{Init, InitOk};
@@ -33,6 +34,20 @@ impl Reply<InitOk> for Body<Init> {
     fn reply(&self) -> InitOk {
         InitOk {
             in_reply_to: self.msg_id,
+        }
+    }
+}
+
+impl Reply<echo::Payload> for Body<echo::Payload> {
+    fn reply(&self) -> echo::Payload {
+        match &self.payload {
+            echo::Payload::Echo { echo } => echo::Payload::EchoOk {
+                echo: echo.clone(),
+                in_reply_to: self.msg_id,
+            },
+            echo::Payload::EchoOk { .. } => {
+                unreachable!()
+            }
         }
     }
 }
