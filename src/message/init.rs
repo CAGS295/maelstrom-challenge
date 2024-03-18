@@ -1,20 +1,22 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(rename = "init")]
 #[serde(tag = "type")]
-#[serde(rename_all = "snake_case")]
-pub enum Extra {
-    Init {
-        node_id: String,
-        node_ids: Vec<String>,
-    },
-    InitOk {
-        in_reply_to: u64,
-    },
+pub struct Init {
+    pub node_id: String,
+    node_ids: Vec<String>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(tag = "type")]
+#[serde(rename = "init_ok")]
+pub struct InitOk {
+    pub in_reply_to: u64,
 }
 
 #[cfg(test)]
-mod test {
+pub mod test {
     use super::*;
     use crate::message::Body;
     use std::str::FromStr;
@@ -23,7 +25,7 @@ mod test {
     fn init_format() {
         let obj = Body {
             msg_id: 0,
-            extra: Extra::Init {
+            payload: Init {
                 node_id: String::from_str("n0").unwrap(),
                 node_ids: vec![String::from_str("n0").unwrap()],
             },
@@ -38,7 +40,7 @@ mod test {
     fn init_ok_format() {
         let obj = Body {
             msg_id: 0,
-            extra: Extra::InitOk { in_reply_to: 0 },
+            payload: InitOk { in_reply_to: 0 },
         };
         assert_eq!(
             serde_json::to_string(&obj).unwrap(),

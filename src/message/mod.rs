@@ -1,17 +1,16 @@
 use serde::{Deserialize, Serialize};
 pub mod init;
 
-pub use init::Extra;
-
+use init::{Init, InitOk};
 #[derive(Deserialize, Debug, Serialize, Clone)]
-pub struct Message {
+pub struct Message<Payload> {
     src: String,
     dest: String,
-    pub body: Body,
+    pub body: Body<Payload>,
 }
 
-impl Message {
-    pub fn reply(&self, body: Body) -> Self {
+impl<Payload> Message<Payload> {
+    pub fn response<R>(&self, body: Body<R>) -> Message<R> {
         Message {
             src: self.dest.clone(),
             dest: self.src.clone(),
@@ -19,10 +18,21 @@ impl Message {
         }
     }
 }
-
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct Body {
+pub struct Body<Payload> {
     pub msg_id: u64,
     #[serde(flatten)]
-    pub extra: init::Extra,
+    pub payload: Payload,
+}
+
+pub trait Reply<R> {
+    fn reply(&self) -> R;
+}
+
+impl Reply<InitOk> for Body<Init> {
+    fn reply(&self) -> InitOk {
+        InitOk {
+            in_reply_to: self.msg_id,
+        }
+    }
 }
