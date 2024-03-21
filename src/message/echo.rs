@@ -1,3 +1,4 @@
+use super::{Body, Reply};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -6,6 +7,20 @@ use serde::{Deserialize, Serialize};
 pub enum Payload {
     Echo { echo: String },
     EchoOk { echo: String, in_reply_to: u64 },
+}
+
+impl Reply<Payload> for Body<Payload> {
+    fn reply(&self) -> Payload {
+        match &self.payload {
+            Payload::Echo { echo } => Payload::EchoOk {
+                echo: echo.clone(),
+                in_reply_to: self.msg_id,
+            },
+            Payload::EchoOk { .. } => {
+                unreachable!()
+            }
+        }
+    }
 }
 
 #[cfg(test)]
