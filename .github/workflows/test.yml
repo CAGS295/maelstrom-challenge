@@ -24,3 +24,29 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
+  maelstrom:
+    runs-on: ubuntu-latest
+    container: rust:latest
+    #needs: build
+    steps:
+    - uses: actions/checkout@v3
+    - name: java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin' # See 'Supported distributions' for available options
+        java-version: '21'
+
+    - name: Cache Dependencies
+      uses: Swatinem/rust-cache@988c164c3d0e93c4dbab36aaf5bbeb77425b2894
+      with:
+        key: stable
+
+    - name: Build
+      run: cargo build --release
+
+    - name: maelstrom
+      run: |
+        apt-get update && apt-get install -y gnuplot
+        curl -SsOL https://github.com/jepsen-io/maelstrom/releases/download/v0.2.3/maelstrom.tar.bz2
+        tar -xjf maelstrom.tar.bz2
+        maelstrom/maelstrom test -w echo --bin target/release/echo --node-count 1 --time-limit 3
