@@ -50,3 +50,4 @@ jobs:
         curl -SsOL https://github.com/jepsen-io/maelstrom/releases/download/v0.2.3/maelstrom.tar.bz2
         tar -xjf maelstrom.tar.bz2
         maelstrom/maelstrom test -w echo --bin target/release/echo --node-count 1 --time-limit 3
+        maelstrom/maelstrom test -w unique-ids --bin target/release/unique_id --node-count 1 --time-limit 3
