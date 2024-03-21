@@ -47,6 +47,7 @@ jobs:
     - name: maelstrom
       run: |
         sudo apt-get update && sudo apt-get install -y gnuplot
+        which gnuplot
         curl -SsOL https://github.com/jepsen-io/maelstrom/releases/download/v0.2.3/maelstrom.tar.bz2
         tar -xjf maelstrom.tar.bz2
         maelstrom/maelstrom test -w echo --bin target/release/echo --node-count 1 --time-limit 3
