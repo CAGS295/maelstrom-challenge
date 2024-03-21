@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 pub mod echo;
 pub mod init;
+pub mod unique_id;
 
 #[derive(Deserialize, Debug, Serialize, Clone)]
 pub struct Message<Payload> {
