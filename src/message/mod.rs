@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 pub mod echo;
 pub mod init;
 
-use init::{Init, InitOk};
 #[derive(Deserialize, Debug, Serialize, Clone)]
 pub struct Message<Payload> {
     src: String,
@@ -26,6 +25,6 @@ pub struct Body<Payload> {
     pub payload: Payload,
 }
 
-pub trait Reply<R> {
-    fn reply(&self) -> R;
+pub trait Reply<R, S> {
+    fn reply(&self, state: S) -> R;
 }
