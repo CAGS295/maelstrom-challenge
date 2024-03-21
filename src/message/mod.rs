@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 pub mod echo;
 pub mod init;
+pub mod unique_id;
 
-use init::{Init, InitOk};
 #[derive(Deserialize, Debug, Serialize, Clone)]
 pub struct Message<Payload> {
     src: String,
@@ -26,28 +26,6 @@ pub struct Body<Payload> {
     pub payload: Payload,
 }
 
-pub trait Reply<R> {
-    fn reply(&self) -> R;
-}
-
-impl Reply<InitOk> for Body<Init> {
-    fn reply(&self) -> InitOk {
-        InitOk {
-            in_reply_to: self.msg_id,
-        }
-    }
-}
-
-impl Reply<echo::Payload> for Body<echo::Payload> {
-    fn reply(&self) -> echo::Payload {
-        match &self.payload {
-            echo::Payload::Echo { echo } => echo::Payload::EchoOk {
-                echo: echo.clone(),
-                in_reply_to: self.msg_id,
-            },
-            echo::Payload::EchoOk { .. } => {
-                unreachable!()
-            }
-        }
-    }
+pub trait Reply<R, S> {
+    fn reply(&self, state: S) -> R;
 }

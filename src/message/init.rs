@@ -1,3 +1,5 @@
+use super::{Body, Reply};
+use crate::Node;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -13,6 +15,14 @@ pub struct Init {
 #[serde(rename = "init_ok")]
 pub struct InitOk {
     pub in_reply_to: u64,
+}
+
+impl Reply<InitOk, &Node> for Body<Init> {
+    fn reply(&self, _state: &Node) -> InitOk {
+        InitOk {
+            in_reply_to: self.msg_id,
+        }
+    }
 }
 
 #[cfg(test)]

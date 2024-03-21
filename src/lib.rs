@@ -35,17 +35,18 @@ impl Node {
 
     pub fn handle<P, R>(&mut self, msg: Message<P>, mut writer: impl Write) -> Result<(), ()>
     where
-        Body<P>: Reply<R>,
+        Body<P>: for<'a> Reply<R, &'a Self>,
         R: Serialize,
     {
         let response = msg.response(Body {
             msg_id: self.msg_id,
-            payload: msg.body.reply(),
+            payload: msg.body.reply(self),
         });
-        self.msg_id += 1;
 
         serde_json::to_writer(&mut writer, &response).unwrap();
         writer.write_all(b"\n").unwrap();
+
+        self.msg_id += 1;
 
         Ok(())
     }
