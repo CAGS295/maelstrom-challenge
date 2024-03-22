@@ -11,8 +11,8 @@ pub enum Payload {
     GenerateOk { id: String, in_reply_to: u64 },
 }
 
-impl Reply<Payload, &Node> for Body<Payload> {
-    fn reply(&self, state: &Node) -> Payload {
+impl Reply<Payload, &mut Node> for Body<Payload> {
+    fn reply(&self, state: &mut Node) -> Payload {
         match &self.payload {
             Payload::Generate => Payload::GenerateOk {
                 id: format!("{}{}", state.node_id, state.msg_id),

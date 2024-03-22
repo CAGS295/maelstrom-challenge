@@ -13,6 +13,7 @@ pub use message::Message;
 pub struct Node {
     msg_id: u64,
     node_id: String,
+    messages: Vec<u64>,
 }
 
 impl Node {
@@ -28,6 +29,7 @@ impl Node {
         let mut node = Self {
             node_id: msg.body.payload.node_id.clone(),
             msg_id: 0,
+            messages: vec![],
         };
         node.handle(msg, writer).unwrap();
         node
@@ -35,7 +37,7 @@ impl Node {
 
     pub fn handle<P, R>(&mut self, msg: Message<P>, mut writer: impl Write) -> Result<(), ()>
     where
-        Body<P>: for<'a> Reply<R, &'a Self>,
+        Body<P>: for<'a> Reply<R, &'a mut Self>,
         R: Serialize,
     {
         let response = msg.response(Body {

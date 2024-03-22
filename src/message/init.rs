@@ -17,8 +17,8 @@ pub struct InitOk {
     pub in_reply_to: u64,
 }
 
-impl Reply<InitOk, &Node> for Body<Init> {
-    fn reply(&self, _state: &Node) -> InitOk {
+impl Reply<InitOk, &mut Node> for Body<Init> {
+    fn reply(&self, _state: &mut Node) -> InitOk {
         InitOk {
             in_reply_to: self.msg_id,
         }
