@@ -71,11 +71,11 @@ mod test {
     fn broadcast_ok_format() {
         let obj = Body {
             msg_id: 12,
-            payload: Payload::BroadcastOk,
+            payload: Payload::BroadcastOk { in_reply_to: 0 },
         };
         assert_eq!(
             serde_json::to_string(&obj).unwrap(),
-            r#"{"msg_id":12,"type":"broadcast_ok"}"#
+            r#"{"msg_id":12,"type":"broadcast_ok","in_reply_to":0}"#
         );
     }
 
@@ -97,11 +97,12 @@ mod test {
             msg_id: 12,
             payload: Payload::ReadOk {
                 messages: vec![1, 2, 3],
+                in_reply_to: 0,
             },
         };
         assert_eq!(
             serde_json::to_string(&obj).unwrap(),
-            r#"{"msg_id":12,"type":"read_ok","messages":[1,2,3]}"#
+            r#"{"msg_id":12,"type":"read_ok","messages":[1,2,3],"in_reply_to":0}"#
         );
     }
 
