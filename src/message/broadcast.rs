@@ -1,4 +1,5 @@
 use super::{Body, Reply};
+use crate::Node;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -9,15 +10,44 @@ pub enum Payload {
     Broadcast {
         message: u64,
     },
-    BroadcastOk,
+    BroadcastOk {
+        in_reply_to: u64,
+    },
     Read,
     ReadOk {
         messages: Vec<u64>,
+        in_reply_to: u64,
     },
     Topology {
         topology: HashMap<String, Vec<String>>,
     },
-    TopologyOk,
+    TopologyOk {
+        in_reply_to: u64,
+    },
+}
+
+impl Reply<Payload, &mut Node> for Body<Payload> {
+    fn reply(&self, state: &mut Node) -> Payload {
+        eprintln!("{self:?}");
+        match &self.payload {
+            Payload::Broadcast { message } => {
+                state.messages.push(*message);
+                Payload::BroadcastOk {
+                    in_reply_to: self.msg_id,
+                }
+            }
+            Payload::BroadcastOk { .. } => unreachable!(),
+            Payload::Read => Payload::ReadOk {
+                messages: state.messages.clone(),
+                in_reply_to: self.msg_id,
+            },
+            Payload::ReadOk { .. } => unreachable!(),
+            Payload::Topology { .. } => Payload::TopologyOk {
+                in_reply_to: self.msg_id,
+            },
+            Payload::TopologyOk { .. } => unreachable!(),
+        }
+    }
 }
 
 #[cfg(test)]

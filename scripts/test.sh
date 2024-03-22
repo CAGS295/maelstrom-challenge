@@ -8,6 +8,9 @@ case $1 in
     unique-id)
     cargo build && ../maelstrom/maelstrom test -w unique-ids --bin target/debug/unique_id --node-count 2 --time-limit 3
     ;;
+    broadcast)
+    cargo build && ../maelstrom/maelstrom test -w broadcast --bin target/debug/broadcast --node-count 1 --time-limit 20 --rate 10
+    ;;
     *)
     echo $1 not supported
     ;;

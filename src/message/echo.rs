@@ -9,8 +9,8 @@ pub enum Payload {
     EchoOk { echo: String, in_reply_to: u64 },
 }
 
-impl<Node> Reply<Payload, &Node> for Body<Payload> {
-    fn reply(&self, _state: &Node) -> Payload {
+impl<Node> Reply<Payload, &mut Node> for Body<Payload> {
+    fn reply(&self, _state: &mut Node) -> Payload {
         match &self.payload {
             Payload::Echo { echo } => Payload::EchoOk {
                 echo: echo.clone(),
