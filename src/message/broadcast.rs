@@ -1,7 +1,7 @@
-use super::{Body, Reply};
+use super::{Message, Reply};
 use crate::Node;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(tag = "type")]
@@ -15,7 +15,7 @@ pub enum Payload {
     },
     Read,
     ReadOk {
-        messages: Vec<u64>,
+        messages: BTreeSet<u64>,
         in_reply_to: u64,
     },
     Topology {
@@ -24,32 +24,47 @@ pub enum Payload {
     TopologyOk {
         in_reply_to: u64,
     },
+    Gossip {
+        messages: BTreeSet<u64>,
+    },
 }
 
-impl Reply<Payload, &mut Node> for Body<Payload> {
-    fn reply(self, state: &mut Node) -> Payload {
-        match self.payload {
+impl Reply<Payload, &mut Node> for Message<Payload> {
+    fn reply(self, state: &mut Node) -> Option<Payload> {
+        match self.body.payload {
             Payload::Broadcast { message } => {
-                state.messages.push(message);
-                Payload::BroadcastOk {
-                    in_reply_to: self.msg_id,
-                }
+                state.messages.insert(message);
+                Some(Payload::BroadcastOk {
+                    in_reply_to: self.body.msg_id,
+                })
             }
             Payload::BroadcastOk { .. } => unreachable!(),
-            Payload::Read => Payload::ReadOk {
+            Payload::Read => Some(Payload::ReadOk {
                 messages: state.messages.clone(),
-                in_reply_to: self.msg_id,
-            },
+                in_reply_to: self.body.msg_id,
+            }),
             Payload::ReadOk { .. } => unreachable!(),
             Payload::Topology { mut topology } => {
                 state.neighborhood = topology
                     .remove(&state.node_id)
                     .unwrap_or_else(|| panic!("topology for {:?}", state.node_id));
-                Payload::TopologyOk {
-                    in_reply_to: self.msg_id,
+                for n in topology.keys().cloned() {
+                    state.known.insert(n, BTreeSet::new());
                 }
+                Some(Payload::TopologyOk {
+                    in_reply_to: self.body.msg_id,
+                })
             }
             Payload::TopologyOk { .. } => unreachable!(),
+            Payload::Gossip { messages } => {
+                state.messages.extend(messages.iter().copied());
+                state
+                    .known
+                    .get_mut(&self.src)
+                    .expect("known topology")
+                    .extend(messages);
+                None
+            }
         }
     }
 }
@@ -100,7 +115,7 @@ mod test {
         let obj = Body {
             msg_id: 12,
             payload: Payload::ReadOk {
-                messages: vec![1, 2, 3],
+                messages: BTreeSet::from([1, 2, 3]),
                 in_reply_to: 0,
             },
         };
@@ -113,7 +128,7 @@ mod test {
     #[test]
     fn topology_format() {
         let mut topology = HashMap::new();
-        topology.insert(format!("n0"), vec![format!("n1")]);
+        topology.insert("n0".to_string(), vec![format!("n1")]);
         let obj = Body {
             msg_id: 12,
             payload: Payload::Topology { topology },
@@ -121,6 +136,20 @@ mod test {
         assert_eq!(
             serde_json::to_string(&obj).unwrap(),
             r#"{"msg_id":12,"type":"topology","topology":{"n0":["n1"]}}"#
+        );
+    }
+
+    #[test]
+    fn gossip_format() {
+        let messages = BTreeSet::from([1, 2, 3]);
+        let body = Body {
+            msg_id: 12,
+            payload: Payload::Gossip { messages },
+        };
+
+        assert_eq!(
+            serde_json::to_string(&body).unwrap(),
+            r#"{"msg_id":12,"type":"gossip","messages":[1,2,3]}"#
         );
     }
 }

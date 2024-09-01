@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{Body, Reply};
+use super::{Message, Reply};
 use crate::Node;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -11,13 +11,13 @@ pub enum Payload {
     GenerateOk { id: String, in_reply_to: u64 },
 }
 
-impl Reply<Payload, &mut Node> for Body<Payload> {
-    fn reply(&self, state: &mut Node) -> Payload {
-        match &self.payload {
-            Payload::Generate => Payload::GenerateOk {
+impl Reply<Payload, &mut Node> for Message<Payload> {
+    fn reply(self, state: &mut Node) -> Option<Payload> {
+        match &self.body.payload {
+            Payload::Generate => Some(Payload::GenerateOk {
                 id: format!("{}{}", state.node_id, state.msg_id),
-                in_reply_to: self.msg_id,
-            },
+                in_reply_to: self.body.msg_id,
+            }),
             Payload::GenerateOk { .. } => unreachable!(),
         }
     }
@@ -45,7 +45,7 @@ mod test {
         let obj = Body {
             msg_id: 12,
             payload: Payload::GenerateOk {
-                id: format!("2"),
+                id: "2".to_string(),
                 in_reply_to: 1,
             },
         };

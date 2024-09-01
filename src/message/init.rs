@@ -1,4 +1,4 @@
-use super::{Body, Reply};
+use super::{Message, Reply};
 use crate::Node;
 use serde::{Deserialize, Serialize};
 
@@ -17,11 +17,11 @@ pub struct InitOk {
     pub in_reply_to: u64,
 }
 
-impl Reply<InitOk, &mut Node> for Body<Init> {
-    fn reply(&self, _state: &mut Node) -> InitOk {
-        InitOk {
-            in_reply_to: self.msg_id,
-        }
+impl Reply<InitOk, &mut Node> for Message<Init> {
+    fn reply(self, _state: &mut Node) -> Option<InitOk> {
+        Some(InitOk {
+            in_reply_to: self.body.msg_id,
+        })
     }
 }
 
