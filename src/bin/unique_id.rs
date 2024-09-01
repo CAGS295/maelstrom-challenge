@@ -13,7 +13,6 @@ fn main() {
     let stdin = stdin().lock();
     for line in stdin.lines() {
         let msg: Message<Payload> = serde_json::from_str(&line.unwrap()).unwrap();
-        node.handle::<Payload, _>(Event::Message(msg), &mut stdout().lock())
-            .unwrap();
+        node.handle::<Payload, _>(Event::Message(msg), &mut stdout().lock());
     }
 }

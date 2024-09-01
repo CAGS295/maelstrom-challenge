@@ -34,7 +34,6 @@ fn main() {
     });
 
     while let Ok(event) = rx.recv() {
-        node.handle::<Payload, _>(event, &mut stdout().lock())
-            .unwrap();
+        node.handle::<Payload, _>(event, &mut stdout().lock());
     }
 }

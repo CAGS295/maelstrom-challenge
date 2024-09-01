@@ -43,11 +43,11 @@ impl Node {
             neighborhood: vec![],
             known: HashMap::new(),
         };
-        node.handle(Event::Message(msg), writer).unwrap();
+        node.handle(Event::Message(msg), writer);
         node
     }
 
-    pub fn handle<P, R>(&mut self, msg: Event<P>, mut writer: impl Write) -> Result<(), ()>
+    pub fn handle<P, R>(&mut self, msg: Event<P>, mut writer: impl Write)
     where
         Message<P>: for<'a> Reply<R, &'a mut Self>,
         R: Serialize,
@@ -81,7 +81,5 @@ impl Node {
                 }
             }
         };
-
-        Ok(())
     }
 }
