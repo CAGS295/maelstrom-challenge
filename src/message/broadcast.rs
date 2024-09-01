@@ -27,11 +27,10 @@ pub enum Payload {
 }
 
 impl Reply<Payload, &mut Node> for Body<Payload> {
-    fn reply(&self, state: &mut Node) -> Payload {
-        eprintln!("{self:?}");
-        match &self.payload {
+    fn reply(self, state: &mut Node) -> Payload {
+        match self.payload {
             Payload::Broadcast { message } => {
-                state.messages.push(*message);
+                state.messages.push(message);
                 Payload::BroadcastOk {
                     in_reply_to: self.msg_id,
                 }
@@ -42,9 +41,14 @@ impl Reply<Payload, &mut Node> for Body<Payload> {
                 in_reply_to: self.msg_id,
             },
             Payload::ReadOk { .. } => unreachable!(),
-            Payload::Topology { .. } => Payload::TopologyOk {
-                in_reply_to: self.msg_id,
-            },
+            Payload::Topology { mut topology } => {
+                state.neighborhood = topology
+                    .remove(&state.node_id)
+                    .unwrap_or_else(|| panic!("topology for {:?}", state.node_id));
+                Payload::TopologyOk {
+                    in_reply_to: self.msg_id,
+                }
+            }
             Payload::TopologyOk { .. } => unreachable!(),
         }
     }
