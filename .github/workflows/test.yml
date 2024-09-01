@@ -25,6 +25,7 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
   maelstrom:
+    needs: build
     runs-on: ubuntu-latest
     container: rust:latest
     #needs: build
