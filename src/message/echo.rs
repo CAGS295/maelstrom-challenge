@@ -1,4 +1,4 @@
-use super::{Body, Reply};
+use super::{Message, Reply};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -9,13 +9,13 @@ pub enum Payload {
     EchoOk { echo: String, in_reply_to: u64 },
 }
 
-impl<Node> Reply<Payload, &mut Node> for Body<Payload> {
-    fn reply(&self, _state: &mut Node) -> Payload {
-        match &self.payload {
-            Payload::Echo { echo } => Payload::EchoOk {
+impl<Node> Reply<Payload, &mut Node> for Message<Payload> {
+    fn reply(self, _state: &mut Node) -> Option<Payload> {
+        match &self.body.payload {
+            Payload::Echo { echo } => Some(Payload::EchoOk {
                 echo: echo.clone(),
-                in_reply_to: self.msg_id,
-            },
+                in_reply_to: self.body.msg_id,
+            }),
             Payload::EchoOk { .. } => {
                 unreachable!()
             }
