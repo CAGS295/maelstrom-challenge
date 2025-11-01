@@ -28,7 +28,7 @@ fn main() {
     spawn(move || {
         let tx = tx;
         loop {
-            sleep(Duration::from_millis(200));
+            sleep(Duration::from_millis(30));
             tx.send(Event::Sync).unwrap();
         }
     });
