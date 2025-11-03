@@ -1,7 +1,10 @@
 use super::{Message, Reply};
 use crate::Node;
+use bloomfilter::Bloom;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashMap};
+
+pub mod bloom_serde;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(tag = "type")]
@@ -25,7 +28,11 @@ pub enum Payload {
         in_reply_to: u64,
     },
     Gossip {
-        messages: BTreeSet<u64>,
+        #[serde(with = "bloom_serde")]
+        bloom: Bloom<u64>,
+    },
+    GossipOk {
+        messages: Vec<u64>,
     },
 }
 
@@ -34,6 +41,7 @@ impl Reply<Payload, &mut Node> for Message<Payload> {
         match self.body.payload {
             Payload::Broadcast { message } => {
                 state.messages.insert(message);
+                state.index.set(&message);
                 Some(Payload::BroadcastOk {
                     in_reply_to: self.body.msg_id,
                 })
@@ -48,21 +56,28 @@ impl Reply<Payload, &mut Node> for Message<Payload> {
                 state.neighborhood = topology
                     .remove(&state.node_id)
                     .unwrap_or_else(|| panic!("topology for {:?}", state.node_id));
-                for n in topology.keys().cloned() {
-                    state.known.insert(n, BTreeSet::new());
-                }
                 Some(Payload::TopologyOk {
                     in_reply_to: self.body.msg_id,
                 })
             }
             Payload::TopologyOk { .. } => unreachable!(),
-            Payload::Gossip { messages } => {
-                state.messages.extend(messages.iter().copied());
-                state
-                    .known
-                    .get_mut(&self.src)
-                    .expect("known topology")
-                    .extend(messages);
+            Payload::Gossip { bloom } => {
+                let dest_diff: Vec<u64> = state
+                    .messages
+                    .iter()
+                    .filter(|m| !bloom.check(m))
+                    .copied()
+                    .collect();
+
+                Some(Payload::GossipOk {
+                    messages: dest_diff,
+                })
+            }
+            Payload::GossipOk { messages } => {
+                for m in &messages {
+                    state.index.set(m);
+                }
+                state.messages.extend(messages);
                 None
             }
         }
@@ -140,11 +155,11 @@ mod test {
     }
 
     #[test]
-    fn gossip_format() {
-        let messages = BTreeSet::from([1, 2, 3]);
+    fn gossip_ok_format() {
+        let messages = Vec::from([1, 2, 3]);
         let body = Body {
             msg_id: 12,
-            payload: Payload::Gossip { messages },
+            payload: Payload::GossipOk { messages },
         };
 
         assert_eq!(

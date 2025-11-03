@@ -1,3 +1,4 @@
+use bloomfilter::Bloom;
 use message::broadcast::Payload;
 use message::init::Init;
 use message::Reply;
@@ -24,7 +25,7 @@ pub struct Node {
     node_id: String,
     messages: BTreeSet<u64>,
     neighborhood: Vec<String>,
-    known: HashMap<String, BTreeSet<u64>>,
+    index: Bloom<u64>,
 }
 
 impl Node {
@@ -41,7 +42,7 @@ impl Node {
             msg_id: 0,
             messages: BTreeSet::new(),
             neighborhood: vec![],
-            known: HashMap::new(),
+            index: Bloom::new_for_fp_rate(10_000, 0.1).unwrap(),
         };
         node.handle(Event::Message(msg), writer);
         node
@@ -68,11 +69,7 @@ impl Node {
                         body: Body {
                             msg_id: self.msg_id,
                             payload: Payload::Gossip {
-                                messages: self
-                                    .messages
-                                    .difference(self.known.get(dest).expect("known topology"))
-                                    .copied()
-                                    .collect(),
+                                bloom: self.index.clone(),
                             },
                         },
                     }
