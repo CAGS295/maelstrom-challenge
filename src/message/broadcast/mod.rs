@@ -164,7 +164,7 @@ mod test {
 
         assert_eq!(
             serde_json::to_string(&body).unwrap(),
-            r#"{"msg_id":12,"type":"gossip","messages":[1,2,3]}"#
+            r#"{"msg_id":12,"type":"gossip_ok","messages":[1,2,3]}"#
         );
     }
 }

@@ -33,7 +33,6 @@ impl<'de, T: ?Sized> Visitor<'de> for BloomVisitor<T> {
     {
         let x = hex::decode(v).unwrap();
         Bloom::from_slice(&x).map_err(|e| {
-            println!("@@ {:?}", e);
             DeError::custom(e)
         })
     }
