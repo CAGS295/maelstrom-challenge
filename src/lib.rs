@@ -1,10 +1,11 @@
 use bloomfilter::Bloom;
 use message::broadcast::Payload;
+use message::broadcast::EXPECT_ELEMENTS;
+use message::broadcast::FP_RATE;
 use message::init::Init;
 use message::Reply;
 use serde::Serialize;
 use std::collections::BTreeSet;
-use std::collections::HashMap;
 use std::io::stdin;
 use std::io::BufRead;
 use std::io::Write;
@@ -42,7 +43,7 @@ impl Node {
             msg_id: 0,
             messages: BTreeSet::new(),
             neighborhood: vec![],
-            index: Bloom::new_for_fp_rate(10_000, 0.1).unwrap(),
+            index: Bloom::new_for_fp_rate(EXPECT_ELEMENTS, FP_RATE).unwrap(),
         };
         node.handle(Event::Message(msg), writer);
         node

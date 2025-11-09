@@ -6,6 +6,52 @@ use std::collections::{BTreeSet, HashMap};
 
 pub mod bloom_serde;
 
+/*
+    grid-top; max. prop. time ∝ (latency + gossip) * sqrt(n) hops
+    let n: 25; max prop time: 2s; latency: 100ms
+
+    optimal gossip: 2_000ms = (100 + G) * sqrt(25)
+    G = 2_000 / 5 - 100
+    G = 300 @ 8msg/op
+
+    mops ∝ 2 * dim_topology * (in_msg + out_msg);
+    let gossip be the message;
+    mops ∝ 2 * 2 * (1 + 1) -> 8 msgs per gossip.
+
+    let mops max: 20
+    20 = 8 * G_count -> 20/8 = 2.5
+
+    est. min gossip; max_gossip * 8 / 20 = 120
+
+*/
+// range [120, 300]
+pub const GOSSIP_INTERVAL: u64 = 120;
+pub const EXPECT_ELEMENTS: usize = 1_100;
+/*
+    obj. reduce max latency.
+    let elements; e : 1_000
+    probability of success per hop (1 - fp)
+    (1-fp)^(sqrt(n))
+
+    let ε : prob of one element not missing after grid n hops.
+    (1-fp)^ 5 = ε
+
+    corners have 2 incoming edges, prob to succeed at least one.
+        $$P(X = k) = \binom{n}{k} p^k (1-p)^{n-k}$$
+
+    P(x): 1 - (1 - ε)**2
+
+    suceed for all numbers P(x)**e
+    P(x | e)**1_000
+
+   Satisfy no misses at the grid corners.
+
+    P(x | 0.01)**1_000 == 0.09027772028293109
+    P(x | 0.005)**1_000 == 0.5418251381604163
+    P(x | 0.001)**1_000 == 0.975406950667474
+*/
+pub const FP_RATE: f64 = 0.001;
+
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(tag = "type")]
 #[serde(rename_all = "snake_case")]

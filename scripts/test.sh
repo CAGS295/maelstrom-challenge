@@ -9,7 +9,7 @@ case $1 in
     cargo build && ./maelstrom/maelstrom test -w unique-ids --bin target/debug/unique_id --node-count 2 --time-limit 3
     ;;
     broadcast)
-    cargo build && ./maelstrom/maelstrom test -w broadcast --bin target/debug/broadcast --node-count 5 --time-limit 5 --rate 10 --nemesis partition
+    cargo build && ./maelstrom/maelstrom test -w broadcast --bin target/debug/broadcast --node-count 25 --time-limit 20 --rate 100 --latency 100 //--nemesis partition
     ;;
     *)
     echo $1 not supported

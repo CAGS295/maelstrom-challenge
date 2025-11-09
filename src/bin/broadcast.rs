@@ -7,6 +7,7 @@ use std::thread::spawn;
 use std::time::Duration;
 
 use maelstrom_challenge::message::broadcast::Payload;
+use maelstrom_challenge::message::broadcast::GOSSIP_INTERVAL;
 use maelstrom_challenge::Event;
 use maelstrom_challenge::Message;
 use maelstrom_challenge::Node;
@@ -28,7 +29,7 @@ fn main() {
     spawn(move || {
         let tx = tx;
         loop {
-            sleep(Duration::from_millis(30));
+            sleep(Duration::from_millis(GOSSIP_INTERVAL));
             tx.send(Event::Sync).unwrap();
         }
     });
